@@ -19,16 +19,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     ArrayList<String> addPlace;
+    ArrayList<LatLng> locations;
     LocationManager locationManager;
     LocationListener locationListener;
+
     double latitude;
     double longitude;
     ListView listView;
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -45,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        listView  = findViewById(R.id.listView);
+        listView = findViewById(R.id.listView);
         addPlace = new ArrayList<>();
         addPlace.add("Add a Place");
         locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
@@ -102,21 +105,18 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("longitude", longitude);
             startActivityForResult(intent, 1);
 
-
-
         });
-
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == 1) {
+        if (resultCode== Activity.RESULT_OK) {
+            if (requestCode ==1) {
                 if (data != null)
-                    System.out.println(data.getStringExtra("address"));
                 addPlace.add(data.getStringExtra("address"));
                 ArrayAdapter arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, addPlace);
                 listView.setAdapter(arrayAdapter);
+
 
             }
         }
