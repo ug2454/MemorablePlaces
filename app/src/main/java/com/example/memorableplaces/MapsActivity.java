@@ -12,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.text.format.Time;
 import android.util.Log;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -39,28 +40,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListener;
     String address = "";
 
+    LatLng currentLocation;
 
-    public void centerMapOnLocation(Location location){
-        LatLng userLocation=new LatLng(location.getLatitude(),location.getLongitude());
-        mMap.clear();
+
+    public void centerMapOnLocation(Location location) {
+        System.out.println("LOCATION"+location);
+        LatLng userLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
         mMap.addMarker(new MarkerOptions().position(userLocation).title(address));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation,16));
+
+
     }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, locationListener);
+            }
+        }
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        Intent intent = getIntent();
-        lat = intent.getDoubleExtra("latitude", 0);
 
-        longi = intent.getDoubleExtra("longitude", 0);
-        Toast.makeText(this, "" + lat + ", " + longi, Toast.LENGTH_SHORT).show();
+
+
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-
 
 
     }
@@ -80,52 +93,70 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng currentLocation = new LatLng(lat, longi);
+        Intent intent = getIntent();
+
+
         if (!checkReady()) {
             return;
         }
-        mMap.addMarker(new MarkerOptions().position(currentLocation).title("Current Location"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 16));
+//        mMap.addMarker(new MarkerOptions().position(currentLocation).title("Current Location"));
+//        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 16));
 
-//        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-//        locationListener = new LocationListener() {
-//            @Override
-//            public void onLocationChanged(@NonNull Location location) {
-//centerMapOnLocation(location);
-//
-//
-//
-//            }
-//
-//            @Override
-//            public void onProviderDisabled(@NonNull String provider) {
-//
-//            }
-//
-//            @Override
-//            public void onProviderEnabled(@NonNull String provider) {
-//
-//            }
-//
-//            @Override
-//            public void onStatusChanged(String provider, int status, Bundle extras) {
-//
-//            }
-//        };
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-//        } else {
-//            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-//            Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-//
-//
-//            if (lastKnownLocation != null) {
-//                centerMapOnLocation(lastKnownLocation);
-//
-//            }
-//
-//
-//        }
+
+        if(intent.getIntExtra("placeLocation",0)==0) {
+            locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+            locationListener = new LocationListener() {
+                @Override
+                public void onLocationChanged(@NonNull Location location) {
+                    centerMapOnLocation(location);
+
+
+                }
+
+                @Override
+                public void onProviderDisabled(@NonNull String provider) {
+
+                }
+
+                @Override
+                public void onProviderEnabled(@NonNull String provider) {
+
+                }
+
+                @Override
+                public void onStatusChanged(String provider, int status, Bundle extras) {
+
+                }
+            };
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            } else {
+                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
+                Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+
+                if (lastKnownLocation != null) {
+                    centerMapOnLocation(lastKnownLocation);
+                    LatLng lastknown = new LatLng(lastKnownLocation.getLatitude(),lastKnownLocation.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastknown,14));
+
+                }
+
+
+            }
+        }
+        else{
+            Location placeLocation = new Location(LocationManager.NETWORK_PROVIDER);
+            System.out.println("IN ELSE LOCATION"+MainActivity.locations.toString());
+            System.out.println("PLACE LOCATION"+intent.getIntExtra("placeLocation",0));
+            placeLocation.setLatitude(MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).latitude);
+            placeLocation.setLongitude(MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).longitude);
+            System.out.println("IN ELSE LOCATION"+MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).latitude+MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).longitude);
+            System.out.println("PLACE LOCATION"+placeLocation);
+            centerMapOnLocation(placeLocation);
+            LatLng newloc=new LatLng(MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).latitude,MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).longitude);
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(newloc,14));
+        }
 
         mMap.setOnMapLongClickListener(latLng -> {
             List<Address> addressList = null;
@@ -153,9 +184,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     Toast.makeText(this, "location saved", Toast.LENGTH_SHORT).show();
                     Log.i("Address", address);
 
-                }
-                else{
-                    address= Time.getCurrentTimezone();
+                } else {
+                    address = Time.getCurrentTimezone();
                     Toast.makeText(this, "location saved", Toast.LENGTH_SHORT).show();
                 }
 
@@ -163,27 +193,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            Log.i("new location", "" + latLng.latitude + "," + latLng.longitude);
+//            Log.i("new location", "" + latLng.latitude + "," + latLng.longitude);
             if (addressList != null && addressList.size() > 0) {
                 mMap.addMarker(new MarkerOptions().position(newLocation).title(addressList.get(0).getFeatureName() + ", " + addressList.get(0).getLocality()));
 
             } else {
                 mMap.addMarker(new MarkerOptions().position(newLocation).title("Location Unavailable"));
             }
-            Intent intent=new Intent();
-            intent.putExtra("address",address);
-            intent.putExtra("latitude",lat);
-            intent.putExtra("longitude",longi);
+//            Intent intent=new Intent();
+//            LatLng loc = new LatLng(lat, longi);
+//            intent.putExtra("address",address);
+//            intent.putExtra("location",loc);
+//
+//
+//            setResult(RESULT_OK,intent);
 
-            setResult(RESULT_OK,intent);
-
+            MainActivity.addPlace.add(address);
+            MainActivity.locations.add(latLng);
+            System.out.println(MainActivity.addPlace.toString());
+            MainActivity.arrayAdapter.notifyDataSetChanged();
+            System.out.println(MainActivity.locations.toString());
 
 
         });
 
        /*
-         TODO: get address of current location on the tooltip marker
-          implement touch and hold to place the marker and get the address of that place
+         TODO: get address of current location on the tooltip marker(done)
+          implement touch and hold to place the marker and get the address of that place(done)
         */
 
 
