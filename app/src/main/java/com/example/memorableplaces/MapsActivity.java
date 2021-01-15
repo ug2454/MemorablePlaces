@@ -150,6 +150,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         else{
             Location placeLocation = new Location(LocationManager.NETWORK_PROVIDER);
             System.out.println("IN ELSE LOCATION"+MainActivity.locations.toString());
+            System.out.println(MainActivity.locations.toString());
             System.out.println("PLACE LOCATION"+intent.getIntExtra("placeLocation",0));
             placeLocation.setLatitude(MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).latitude);
             placeLocation.setLongitude(MainActivity.locations.get(intent.getIntExtra("placeLocation",0)).longitude);

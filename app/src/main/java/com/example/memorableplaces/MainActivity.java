@@ -36,33 +36,30 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         addPlace = new ArrayList<>();
-SharedPreferences sharedPreferences = this.getSharedPreferences("com.example.memorableplaces",Context.MODE_PRIVATE);
-        ArrayList<String> latitudes= new ArrayList<>();
+        SharedPreferences sharedPreferences = this.getSharedPreferences("com.example.memorableplaces", Context.MODE_PRIVATE);
+        ArrayList<String> latitudes = new ArrayList<>();
         ArrayList<String> longitudes = new ArrayList<>();
 
 
-
-        try{
-            System.out.println((ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places",ObjectSerializer.serialize(new ArrayList<String>()))));
-          addPlace= (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places",ObjectSerializer.serialize(new ArrayList<String>())));
-          latitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("latitudes",ObjectSerializer.serialize(new ArrayList<String>())));
-          longitudes=  (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("longitudes",ObjectSerializer.serialize(new ArrayList<String>())));
+        try {
+            System.out.println((ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places", ObjectSerializer.serialize(new ArrayList<String>()))));
+            addPlace = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("places", ObjectSerializer.serialize(new ArrayList<String>())));
+            latitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("latitudes", ObjectSerializer.serialize(new ArrayList<String>())));
+            longitudes = (ArrayList<String>) ObjectSerializer.deserialize(sharedPreferences.getString("longitudes", ObjectSerializer.serialize(new ArrayList<String>())));
         } catch (Exception e) {
             e.printStackTrace();
         }
 
 
-
-        if(addPlace.size()>0 && latitudes.size()>0 && longitudes.size()>0){
+        if (addPlace.size() > 0 && latitudes.size() > 0 && longitudes.size() > 0) {
             System.out.println("IN IF");
-            if(addPlace.size()==latitudes.size() && addPlace.size()==longitudes.size()){
-                for(int i=0;i<addPlace.size();i++){
-                    LatLng latLng = new LatLng(Double.parseDouble(latitudes.get(i)),Double.parseDouble(longitudes.get(i)));
+            if (addPlace.size() == latitudes.size() && addPlace.size() == longitudes.size()) {
+                for (int i = 0; i < addPlace.size(); i++) {
+                    LatLng latLng = new LatLng(Double.parseDouble(latitudes.get(i)), Double.parseDouble(longitudes.get(i)));
                     locations.add(latLng);
                 }
             }
-        }
-        else{
+        } else {
             System.out.println("IN ELSE");
             addPlace.add("Add a Place");
             locations.add(new LatLng(0, 0));
@@ -89,10 +86,26 @@ SharedPreferences sharedPreferences = this.getSharedPreferences("com.example.mem
         listView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-              addPlace.remove(i);
-              locations.remove(i);
-              arrayAdapter.notifyDataSetChanged();
-              return false;
+                addPlace.remove(i);
+                locations.remove(i);
+                arrayAdapter.notifyDataSetChanged();
+                ArrayList<String> latitudes= new ArrayList<>();
+                ArrayList<String> longitudes = new ArrayList<>();
+
+                for(LatLng coord:MainActivity.locations){
+                    latitudes.add(Double.toString(coord.latitude));
+                    longitudes.add(Double.toString(coord.longitude));
+                }
+                try {
+                    sharedPreferences.edit().putString("places", ObjectSerializer.serialize(MainActivity.addPlace)).commit();
+                    sharedPreferences.edit().putString("latitudes", ObjectSerializer.serialize(latitudes)).apply();
+                    sharedPreferences.edit().putString("longitudes", ObjectSerializer.serialize(longitudes)).apply();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+
+                return false;
             }
         });
     }
